@@ -6,7 +6,7 @@ from telegram.ext import (
     ContextTypes,
 )
 
-TOKEN = os.getenv("7245345277:AAG6u2O8KRWa_mc2nUBD1vzAgMUirEm0Fz4")
+TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("✅ ربات فعال شد. خوش‌اومدی!")
