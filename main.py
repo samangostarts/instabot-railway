@@ -1,41 +1,35 @@
-import os
-import time
+import os, time
 from instagrapi import Client
 from telegram import Bot
 
-# بارگذاری اطلاعات حسّاس از ENV
-:contentReference[oaicite:3]{index=3}
-:contentReference[oaicite:4]{index=4}
-:contentReference[oaicite:5]{index=5}
-:contentReference[oaicite:6]{index=6}
+TG_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+IG_USER = os.getenv("INSTAGRAM_USERNAME")
+IG_PASS = os.getenv("INSTAGRAM_PASSWORD")
+TG_CHAT_ID = os.getenv("TG_CHAT_ID")
 
-# لاگین اینستاگرام
+if not all([TG_TOKEN, IG_USER, IG_PASS, TG_CHAT_ID]):
+    print("❌ لطفاً تمام متغیر‌های محیطی را بررسی کن.")
+    exit(1)
+
 cl = Client()
-:contentReference[oaicite:7]{index=7}
-
-# ساخت ربات تلگرام
-:contentReference[oaicite:8]{index=8}
-
-# نگهداری شناسه آخرین پیام خوانده شده
+cl.login(IG_USER, IG_PASS)
+bot = Bot(token=TG_TOKEN)
 last_seen = {}
 
 def forwarding_loop():
-    global last_seen
-    :contentReference[oaicite:9]{index=9}
-    :contentReference[oaicite:10]{index=10}
-        :contentReference[oaicite:11]{index=11}
-        :contentReference[oaicite:12]{index=12}
-        :contentReference[oaicite:13]{index=13}
-            :contentReference[oaicite:14]{index=14}
-            :contentReference[oaicite:15]{index=15}
-                :contentReference[oaicite:16]{index=16}
-                :contentReference[oaicite:17]{index=17}\n:contentReference[oaicite:18]{index=18}
-                :contentReference[oaicite:19]{index=19}
-                :contentReference[oaicite:20]{index=20}
-                    :contentReference[oaicite:21]{index=21}
-                    :contentReference[oaicite:22]{index=22}
+    threads = cl.direct_threads(amount=5, selected_filter="unread")
+    for thread in threads:
+        tid = thread.id
+        msgs = cl.direct_messages(tid, amount=5)
+        for msg in msgs:
+            if last_seen.get(tid, 0) < msg.id:
+                last_seen[tid] = msg.id
+                text = f"📩 از {thread.users[0].username}:\n{msg.text or '<فایل فرستاده شده>'}"
+                bot.send_message(chat_id=TG_CHAT_ID, text=text)
+                if msg.media:
+                    fpath = cl.direct_download(msg.media.pk, folder=".")
+                    bot.send_document(chat_id=TG_CHAT_ID, document=open(fpath, 'rb'))
 
-:contentReference[oaicite:23]{index=23}
-    while True:
-        forwarding_loop()
-        :contentReference[oaicite:24]{index=24}
+while True:
+    forwarding_loop()
+    time.sleep(60)
